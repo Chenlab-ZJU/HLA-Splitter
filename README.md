@@ -126,6 +126,9 @@
 
 ![image](https://github.com/user-attachments/assets/b1476531-e4ae-4379-bb3b-7972e3a8e36f)
 
+- Countplot_Adjusted_Prediction.pdf will look like
+
+- ![image](https://github.com/user-attachments/assets/a0998765-7c0e-40f5-9f3b-b2c311fd3802)
 
 **How it Works:**
 
