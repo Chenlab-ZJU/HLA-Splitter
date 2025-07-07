@@ -124,7 +124,8 @@
 
 - HLA_TSNE_Adjusted_Prediction.pdf will look like
 
-![](README_md_files/3ccab4d0-1b70-11f0-bc77-a95431d2a2f1.jpeg?v=1&type=image)
+![image](https://github.com/user-attachments/assets/b1476531-e4ae-4379-bb3b-7972e3a8e36f)
+
 
 **How it Works:**
 
