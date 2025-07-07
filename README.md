@@ -129,7 +129,6 @@
 - Countplot_Adjusted_Prediction.pdf will look like
 
 - ![image](https://github.com/user-attachments/assets/a0998765-7c0e-40f5-9f3b-b2c311fd3802)
-
 **How it Works:**
 
 - The user installs the package using `pip`.
