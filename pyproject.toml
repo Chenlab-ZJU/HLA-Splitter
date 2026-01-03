@@ -26,7 +26,6 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
-dynamic = ["dependencies"] 
 
 # Python dependencies
 dependencies = [
@@ -43,6 +42,5 @@ dependencies = [
 Homepage = "https://github.com/Yufei/HLA-Splitter"
 Repository = "https://github.com/Yufei/HLA-Splitter"
 
-# Command-line entry point
 [project.scripts]
 HLA-Splitter = "hla_splitter.cli:main"
