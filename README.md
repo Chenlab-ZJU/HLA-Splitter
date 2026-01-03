@@ -25,7 +25,7 @@
   Bash
 
   ```
-  git clone https://github.com/Yufei/HLA-Splitter_v1.git
+  git clone https://Chenlab-ZJU/HLA-Splitter/HLA-Splitter_v1.git
   cd HLA-Splitter_v1
   pip install .
   # Or for development: pip install -e .
