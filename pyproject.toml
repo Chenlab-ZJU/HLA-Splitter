@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "HLA-Splitter"
+version = "0.1.0"
+description = "Pipeline for Demultiplexing samples from single-cell RNA-seq data using HLA genotypes."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Yufei,Gao", email = "594328217@qq.com" },
+]
+maintainers = [
+    { name = "Yufei,Gao", email = "594328217@qq.com" },
+]
+keywords = ["bioinformatics", "hla", "single-cell", "demultiplexing", "kallisto", "bustools"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dynamic = ["dependencies"] 
+
+# Python dependencies
+dependencies = [
+    "numpy",
+    "pandas>=0.23.4",
+    "scanpy",
+    "scikit-learn",
+    "scipy",
+    "matplotlib",
+    "seaborn>=0.9.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/Yufei/HLA-Splitter"
+Repository = "https://github.com/Yufei/HLA-Splitter"
+
+# Command-line entry point
+[project.scripts]
+HLA-Splitter = "hla_splitter.cli:main"
