@@ -31,7 +31,7 @@ We use the file `hla_nuc.fasta` which contains the nucleotide coding sequences (
 
 ```bash
 # Clone the repository
-git clone [https://github.com/Chenlab-ZJU/HLA-Splitter.git](https://github.com/Chenlab-ZJU/HLA-Splitter.git)
+git clone https://github.com/Chenlab-ZJU/HLA-Splitter.git
 
 # Enter the directory
 cd HLA-Splitter
