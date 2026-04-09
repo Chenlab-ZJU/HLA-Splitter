@@ -26,25 +26,26 @@ def run_command(command_str, check=True, cwd=None, shell=False):
     """
     log.info(f"Running command: {command_str}")
 
-    # 默认情况下，我们希望捕获 stderr 进行日志记录。
-    # 对于 stdout，如果 shell=True 并且命令包含重定向（> 或 >>），
-    # 则让 shell 处理重定向，Python 不捕获 stdout。
+    # By default, capture stderr for logging purposes.
+    # Capture stdout unless shell=True and redirection (> or >>) is used in the command.
+    # If redirection is used, we let the shell handle it instead of Python capturing stdout.
     stdout_target = subprocess.PIPE
     stderr_target = subprocess.PIPE
     text_decode = True
 
     if shell and ('>' in command_str or '>>' in command_str):
-        # 当命令字符串中包含 shell 重定向时，
-        # 我们告诉 subprocess.run 不要捕获 stdout。
-        # 此时，command_str 会被作为 shell 命令执行，其输出由 shell 负责重定向。
+        # When the command string contains shell redirection operators,
+        # we instruct subprocess.run not to capture stdout.
+        # The command_str will be executed directly by the shell, which will handle the file redirection.
         stdout_target = None
+        
     try:
         # If not using shell, split the command safely
         cmd_list = shlex.split(command_str) if not shell else command_str
         result = subprocess.run(
             cmd_list,
             check=check,
-            stdout=stdout_target, # 根据是否包含重定向设置 stdout
+            stdout=stdout_target, # Determine whether to capture stdout based on redirection checks
             stderr=stderr_target,
             text=text_decode,
             cwd=cwd,
@@ -56,11 +57,13 @@ def run_command(command_str, check=True, cwd=None, shell=False):
             log.warning(f"Command STDERR:\n{result.stderr.strip()}")
         log.info(f"Command finished successfully.")
         return result
+        
     except subprocess.CalledProcessError as e:
         log.error(f"Command failed with exit code {e.returncode}")
         log.error(f"Command: {e.cmd}")
         log.error(f"STDERR:\n{e.stderr.strip()}")
-        log.error(f"STDOUT:\n{e.stdout.strip()}")
+        if e.stdout:
+            log.error(f"STDOUT:\n{e.stdout.strip()}")
         # Re-raise the error if check=True was intended behaviour
         if check:
             raise e
