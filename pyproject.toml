@@ -39,8 +39,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Yufei/HLA-Splitter"
-Repository = "https://github.com/Yufei/HLA-Splitter"
+Homepage = "https://github.com/Chenlab-ZJU/HLA-Splitter"
+Repository = "hhttps://github.com/Chenlab-ZJU/HLA-Splitter"
 
 [project.scripts]
 HLA-Splitter = "hla_splitter.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["hla_splitter*"]
