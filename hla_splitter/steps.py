@@ -2,7 +2,8 @@ import os
 import sys
 import logging
 import gzip
-from .utils import run_command # Use the helper function
+import shutil
+from .utils import run_command
 
 log = logging.getLogger(__name__)
 
@@ -250,3 +251,43 @@ def run_alignment_and_counting(barcodes_10x_path, kallisto_index_path, fastq_dir
 
     log.info(f"Counting finished. Output matrices in: {count_out_dir}")
     return count_out_dir
+
+def cleanup_intermediate_files(out_dir):
+    """
+    Removes large intermediate files to save disk space.
+    Target files: FASTQ directory, raw and sorted .bus files, temporary text files.
+    """
+    log.info("Cleaning up intermediate files...")
+    
+    # Define the list of intermediate files and directories to be deleted
+    paths_to_delete = [
+        os.path.join(out_dir, "fastq"),                   # The extracted FASTQ directory (usually very large)
+        os.path.join(out_dir, "cds.fasta"),
+        os.path.join(out_dir, "corrected_barcodes.tsv"),
+        os.path.join(out_dir, "hla.bam"),
+        os.path.join(out_dir, "hla_kallisto_index"),
+        os.path.join(out_dir, "tmpallele.txt"),
+        os.path.join(out_dir, "sc_output", "output.bus"), # Raw kallisto bus output
+        os.path.join(out_dir, "sc_output", "sorted.bus"), # Sorted bus file
+        os.path.join(out_dir, "sc_output", "filtered.bus"), # Captured bus file
+        os.path.join(out_dir, "sc_output", "matrix.ec"),
+        os.path.join(out_dir, "sc_output", "t2g.txt"),
+        os.path.join(out_dir, "sc_output", "transcripts.txt"),
+        os.path.join(out_dir, "corrected_barcodes.tsv"),  # Temporary barcodes list
+        os.path.join(out_dir, "tmpallele.txt"),           # Temporary fasta headers
+    ]
+
+    for path in paths_to_delete:
+        try:
+            if os.path.exists(path):
+                if os.path.isdir(path):
+                    shutil.rmtree(path)
+                    log.debug(f"Deleted intermediate directory: {path}")
+                else:
+                    os.remove(path)
+                    log.debug(f"Deleted intermediate file: {path}")
+        except Exception as e:
+            # Use warning instead of error so it doesn't crash the pipeline at the very end
+            log.warning(f"Failed to delete temporary file {path}: {e}")
+            
+    log.info("Cleanup complete.")
