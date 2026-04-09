@@ -142,7 +142,7 @@ output_directory/
 
 ------
 
-## 🔬 How it Works
+## How it Works
 
 1. **Read Extraction**: Uses `samtools` to extract reads mapped to the HLA region (chr6).
 2. **Pseudo-alignment**: Leverages `kallisto` and `bustools` to align reads against the donor-specific HLA reference.
@@ -151,8 +151,9 @@ output_directory/
 
 ------
 
-### 📝 Citation
+### Citation
 
 If you use HLA-Splitter in your research, please cite:
 
 *Chen Lab, Zhejiang University (2024)*.
+
