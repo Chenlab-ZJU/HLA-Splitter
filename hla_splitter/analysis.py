@@ -236,7 +236,7 @@ def run_demultiplex(hla_list_path, out_dir, graph_corr=False):
         custom_palette["Undefined"] = "gray"
 
         # --- 4. & 5. & 6. t-SNE Embedding, Neighbor Adjustment, and Scatter Plot ---
-        log.info("Calculating t-SNE embedding...")
+        log.info("Calculating t-SNE embedding...") 
         if HLA_matrix_final.shape[0] < 2 or HLA_matrix_final.shape[1] < 2:
             log.warning("Matrix too small for t-SNE, skipping embedding and adjustment. Returning initial predictions.")
             tsne_df = pd.DataFrame(index=HLA_matrix_final.index)
@@ -262,21 +262,36 @@ def run_demultiplex(hla_list_path, out_dir, graph_corr=False):
             tsne_df["sample_predict"] = sample_predict_series
     
             log.info("Adjusting predictions based on neighbors...")
-            n_neighbor = min(100, HLA_matrix_final.shape[0] - 1) # Ensure n_neighbor < total cells
-            if n_neighbor > 1: # Requires at least 2 cells to calculate neighbors
+            cluster_sizes = tsne_df["sample_predict"].value_counts()
+            max_k = int(cluster_sizes.max() // 2)
+            if max_k >= 1: 
                 point_set = tsne_df[['TSNE1', 'TSNE2']].values
                 log.info("Building KDTree...")
                 kt = spt.KDTree(point_set)
-                log.info(f"Querying {n_neighbor} neighbors...")
-                _, neighbour_indices = kt.query(point_set, k=n_neighbor + 1) # Query k+1 to exclude the point itself
 
-                log.info("Adjusting labels based on neighbors...")
+                log.info(f"Querying up to {max_k} neighbors for dynamic adjustment...")
+                _, all_neighbour_indices = kt.query(point_set, k=max_k + 1)
+
+                log.info("Adjusting labels based on sample-specific neighbors...")
                 adjusted_predict = tsne_df["sample_predict"].copy()
                 certainty_list = []
 
                 for i in range(len(tsne_df)): 
-                    valid_neighbor_indices = [idx for idx in neighbour_indices[i] if idx != i]
-                    if not valid_neighbor_indices: # If no valid neighbors (e.g., very few cells)
+                    current_label = tsne_df["sample_predict"].iloc[i]
+                    
+                    k_i = int(cluster_sizes[current_label] // 2)
+                    
+                    if k_i < 1:
+                        certainty_list.append(0.0)
+                        continue
+                    
+                    cell_neighbors = all_neighbour_indices[i][:k_i + 1]
+                    
+                    valid_neighbor_indices = [idx for idx in cell_neighbors if idx != i]
+                    
+                    valid_neighbor_indices = valid_neighbor_indices[:k_i]
+                    
+                    if not valid_neighbor_indices:
                         certainty_list.append(0.0)
                         continue
         
@@ -289,27 +304,26 @@ def run_demultiplex(hla_list_path, out_dir, graph_corr=False):
         
                     dominate_type = neighbor_counts.index[0]
                     dominate_count = neighbor_counts.iloc[0]
-                    cert = dominate_count / (len(valid_neighbor_indices)) # Certainty: proportion of dominant neighbors
+                    cert = dominate_count / len(valid_neighbor_indices) # 置信度
                     certainty_list.append(cert)
-
+                    
+                    if graph_corr:
+                        if dominate_type != current_label:
+                            if cert > 0.5: 
+                                adjusted_predict.iloc[i] = dominate_type
+                            else:
+                                adjusted_predict.iloc[i] = "Undefined"
+                                
                 certainty = pd.Series(certainty_list, index=tsne_df.index)
-    
+                
                 if graph_corr:
-                    current_label = tsne_df["sample_predict"].iloc[i]
-                    if dominate_type != current_label:
-                        # If neighbors' dominant type certainty is high enough, override current cell label
-                        if cert > 0.5: 
-                            adjusted_predict.iloc[i] = dominate_type
-                        else:
-                            adjusted_predict.iloc[i] = "Undefined"
-                        
-                        tsne_df["final_predict"] = adjusted_predict
+                    tsne_df["final_predict"] = adjusted_predict
                 else:
-                    log.info("Graph-based correlation is disabled (--graph-corr not set). Skipping t-SNE and Graph-based correlation.")
-                    tsne_df["final_predict"] = sample_predict_series
-
+                    log.info("Graph-based correlation is disabled (--graph-corr not set). Skipping label adjustment.")
+                    tsne_df["final_predict"] = tsne_df["sample_predict"]
+                    
             else:
-                log.warning(f"Not enough cells ({HLA_matrix_final.shape[0]}) for neighbor adjustment with {n_neighbor} neighbors. Skipping adjustment.")
+                log.warning("Max calculated n_neighbor < 1. Not enough cells per sample for neighbor adjustment. Skipping adjustment.")
                 tsne_df["final_predict"] = tsne_df["sample_predict"]
                 certainty = pd.Series("NA", index=tsne_df.index)
 
