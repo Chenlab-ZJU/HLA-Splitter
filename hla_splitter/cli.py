@@ -22,7 +22,7 @@ def get_args():
     parser.add_argument("-L", "--hlalist", required=True, help="Path to CSV file listing HLA alleles for each expected sample (header row = sample names).")
     parser.add_argument("-o", "--outdir", required=True, help="Path to output directory.")
     parser.add_argument("-t", "--threads", type=int, default=8, help="Number of threads to use for compatible tools (default: 8).")
-    parser.add_argument("--graph-corr", action="store_true", help="Enable graph-based correlation for demultiplexing refinement.")
+    parser.add_argument("--graph_corr", action="store_true", help="Enable graph-based correlation for demultiplexing refinement.")
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
 
     return parser.parse_args()
@@ -85,7 +85,7 @@ def main():
         hla_matrix_file = analysis.summarize_counts(args.outdir) # Uses files within count_dir
 
         log.info("Step 6: Running demultiplexing analysis...")
-        demux_results_file = analysis.run_demultiplex(args.hlalist, args.outdir) # Uses hla_matrix_file
+        demux_results_file = analysis.run_demultiplex(args.hlalist, args.outdir, args.graph_corr) # Uses hla_matrix_file
 
         log.info("Step 7: Cleaning up intermediate files.")
         steps.cleanup_intermediate_files(args.outdir)
