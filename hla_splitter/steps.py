@@ -66,20 +66,26 @@ def build_hla_reference(hla_nuc_fasta_path, sorted_genotypes_path, out_dir):
     # Instead of grep, read fasta header and check if pattern matches start
     # This is safer than direct grep if patterns have special characters
     with open(hla_nuc_fasta_path, 'r') as hla_fasta, open(tmp_allele_file, 'w') as tmp_out:
-         current_header = None
-         for line in hla_fasta:
-             if line.startswith('>'):
-                 current_header = line.strip()
-                 # Check if any pattern matches the start of the header's allele part
-                 header_allele_part = current_header.split(' ')[1][0:] # Get part of HLA allele
-                 if (":" in header_allele_part):
-                     header_allele_part = header_allele_part.split(":")[0][0:]+":"+header_allele_part.split(":")[1][0:] # 2 field HLA-genes
-                 if any(header_allele_part==p for p in patterns):
-                     tmp_out.write(current_header + '\n')
-                     selected_headers.append(current_header)
-                     short_id = current_header[1:].split(' ')[0]
-                     full_header_map[short_id] = current_header # Map short ID to full header
-             # No need to write sequence lines here
+        current_header = None
+        for line in hla_fasta:
+            if line.startswith('>'):
+                current_header = line.strip()
+                parts = current_header.split()
+                if len(parts) > 1:
+                    fasta_allele = parts[1] # 例如 "A*01:01:01:01"
+                else:
+                    continue
+                is_match = False
+                for p in patterns:
+                    if fasta_allele == p or fasta_allele.startswith(p + ':'):
+                        is_match = True
+                        breakpoint
+                if is_match:
+                    tmp_out.write(current_header + '\n')
+                    selected_headers.append(current_header)
+                    short_id = parts[0][1:]
+                    full_header_map[short_id] = current_header
+                    
     log.info(f"Found {len(selected_headers)} matching allele headers.")
     if not selected_headers:
         log.error("No headers matching genotypes found in HLA FASTA. Check genotype format and FASTA.")
@@ -212,8 +218,12 @@ def run_alignment_and_counting(barcodes_10x_path, kallisto_index_path, fastq_dir
     # Or maybe bustools just needs TranscriptID TranscriptID (if --genecounts is used?)
     # The original script used tmpallele.txt (>ID Description) -> t2g.txt (ID Description)
     # Let's replicate that structure for bustools count -g
+    except Exception as e:
+        log.error(f"Failed to create t2g file: {e}")
+        sys.exit(1)
+
     t2g_file = os.path.join(sc_output_dir, "t2g.txt")
-    tmp_allele_file = os.path.join(out_dir, "tmpallele.txt") # Created by build_hla_reference
+    tmp_allele_file = os.path.join(out_dir, "tmpallele.txt")
     log.info(f"Creating transcript-to-gene map (t2g): {t2g_file}")
     if not os.path.exists(tmp_allele_file):
         log.error(f"tmpallele.txt not found in {out_dir}. It should be created by build_hla_reference.")
@@ -222,12 +232,12 @@ def run_alignment_and_counting(barcodes_10x_path, kallisto_index_path, fastq_dir
         with open(tmp_allele_file, 'r') as infile, open(t2g_file, 'w') as outfile:
             for line in infile:
                 if line.startswith('>'):
-                    # Format: ID Gene (often ID == Gene for this type of analysis)
-                    transcript_id = line[1:].strip().split(' ')[0][0:]
-                    # Use transcript ID as gene ID if no description, or per specific requirement
-                    gene_id = line[1:].strip().split(' ')[1][0:] # Modify if gene grouping is needed
-                    gene_id = gene_id.split(":")[0][0:]+":"+gene_id.split(":")[1][0:] # 2 field HLA-genes
-                    outfile.write(f"{transcript_id} {gene_id}\n") # Tab separated usually preferred
+                    parts = line.strip().split()
+                    if len(parts) > 1:
+                        transcript_id = parts[0][1:]
+                        gene_id = parts[1] 
+                        outfile.write(f"{transcript_id} {gene_id}\n")
+                        
     except Exception as e:
         log.error(f"Failed to create t2g file: {e}")
         sys.exit(1)
