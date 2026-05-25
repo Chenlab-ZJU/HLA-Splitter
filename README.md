@@ -76,6 +76,7 @@ HLA-Splitter \
     --hlalist /path/to/samples_hla_alleles.csv \
     --outdir /path/to/output_directory \
     --threads 16
+    --graph-corr
 ```
 
 ### Parameters Detail
